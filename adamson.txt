@@ -1,0 +1,182 @@
+--==============================================================================
+-- 1. ADIM: ORION KÜTÜPHANESİNİ YÜKLE
+[cite_start]-- Bu satır, her zaman en başta olmalıdır. [cite: 1]
+--==============================================================================
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/ZeeZee2Real/shlexware-Orion-main-source/main/gr')))()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+--==============================================================================
+-- ANA MENÜ PENCERESİNİ OLUŞTUR
+--==============================================================================
+local Window = OrionLib:MakeWindow({
+    Name = "7/I oc",
+    Subtitle = "by IgniteScripts",
+    HidePremium = true,
+    SaveMethod = "IgniteConfig",
+    DragToggle = Enum.KeyCode.RightControl, -- Menüyü açıp kapatmak için Sağ CTRL tuşu
+    IntroEnabled = false -- Giriş animasyonunu kapat
+})
+
+--==============================================================================
+-- DEĞİŞKENLER VE FONKSİYONLAR
+--==============================================================================
+local Fly = false
+local InfiniteJump = false
+local ESP_Enabled = false
+local SpeedValue = 16 -- Roblox'un varsayılan yürüme hızı
+
+-- Sonsuz zıplama fonksiyonu
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if InfiniteJump then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
+-- Hız ve Uçma için sürekli döngü
+spawn(function()
+    while wait() do
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            local humanoid = LocalPlayer.Character.Humanoid
+            humanoid.WalkSpeed = SpeedValue
+
+            if Fly then
+                local bodyVelocity = Instance.new("BodyVelocity")
+                bodyVelocity.Parent = LocalPlayer.Character.HumanoidRootPart
+                bodyVelocity.MaxForce = Vector3.new(0, 999999, 0)
+                bodyVelocity.Velocity = Vector3.new(0, 5, 0)
+            else
+                if LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then
+                    LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyVelocity"):Destroy()
+                end
+            end
+        end
+    end
+end)
+
+-- Oyuncu ESP'si için çizim fonksiyonları
+local function CreateESP(player)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local espBox = Drawing.new("Box")
+        espBox.Color = Color3.new(1, 0, 0)
+        espBox.Thickness = 2
+        espBox.Visible = true
+
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if ESP_Enabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local playerPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+                if onScreen then
+                    local headPos, _ = workspace.CurrentCamera:WorldToViewportPoint(player.Character.Head.Position + Vector3.new(0, 0.5, 0))
+                    local boxHeight = math.abs(headPos.Y - playerPos.Y)
+                    local boxWidth = boxHeight / 2
+
+                    espBox.Position = Vector2.new(playerPos.X - boxWidth / 2, playerPos.Y - boxHeight / 2)
+                    espBox.Size = Vector2.new(boxWidth, boxHeight)
+                    espBox.Visible = true
+                else
+                    espBox.Visible = false
+                end
+            else
+                espBox.Visible = false
+                connection:Disconnect() -- ESP kapatıldığında veya oyuncu ayrıldığında bağlantıyı kes
+            end
+        end)
+    end
+end
+
+-- Tüm oyuncular için ESP'yi başlat veya durdur
+local function ToggleESP(enabled)
+    ESP_Enabled = enabled
+    if enabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                CreateESP(player)
+            end
+        end
+    end
+end
+
+-- Yeni oyuncular katıldığında ESP oluştur
+Players.PlayerAdded:Connect(function(player)
+    if ESP_Enabled then
+        CreateESP(player)
+    end
+end)
+
+
+--==============================================================================
+-- SEKMELERİ (TABS) OLUŞTUR
+--==============================================================================
+local Tabs = {
+    Main = Window:MakeTab({
+        Name = "Main",
+        Icon = "rbxassetid://4483345637", -- Şimşek ikonu
+        Premium = false
+    }),
+    ESP = Window:MakeTab({
+        Name = "ESP",
+        Icon = "rbxassetid://4483345998", -- Göz ikonu
+        Premium = false
+    })
+}
+
+--==============================================================================
+-- "MAIN" SEKMESİNE ELEMENTLERİ EKLE
+--==============================================================================
+local MainTab = Tabs.Main
+
+MainTab:AddToggle({
+    Name = "Fly",
+    Callback = function(value)
+        Fly = value
+        if not value and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            -- Uçuş kapatıldığında oluşturulan BodyVelocity'i temizle
+            local bv = LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyVelocity")
+            if bv then
+                bv:Destroy()
+            end
+        end
+    end
+})
+
+MainTab:AddToggle({
+    Name = "Infinite Jump",
+    Callback = function(value)
+        InfiniteJump = value
+    end
+})
+
+MainTab:AddSlider({
+    Name = "Speed",
+    Min = 16, -- Varsayılan hız
+    Max = 200, -- Maksimum hız
+    Default = 16,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "WalkSpeed",
+    Callback = function(value)
+        SpeedValue = value
+    end
+})
+
+
+--==============================================================================
+-- "ESP" SEKMESİNE ELEMENTLERİ EKLE
+--==============================================================================
+local ESPTab = Tabs.ESP
+
+ESPTab:AddToggle({
+    Name = "Enable Player ESP",
+    Callback = function(value)
+        ToggleESP(value)
+    end
+})
+
+ESPTab:AddLabel("Shows other players through walls.")
+
+
+--==============================================================================
+-- KÜTÜPHANEYİ BAŞLAT
+--==============================================================================
+OrionLib:Init()
