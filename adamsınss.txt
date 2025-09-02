@@ -1,0 +1,188 @@
+--==============================================================================
+-- KÜTÜPHANE VE SERVİSLER
+--==============================================================================
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/ZeeZee2Real/shlexware-Orion-main-source/main/gr')))()
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local localPlayer = Players.LocalPlayer
+
+--==============================================================================
+-- AYARLAR VE DURUM TABLOSU
+--==============================================================================
+-- Bütün özelliklerin durumunu ve ayarlarını bu tek tabloda tutacağız.
+local Settings = {
+    Speed = {
+        Enabled = false,
+        Value = 16
+    },
+    InfiniteJump = {
+        Enabled = false
+    },
+    Fly = {
+        Enabled = false,
+        Value = 10
+    }
+}
+
+-- Uçuş için gerekli fiziksel objeleri tutan değişkenler
+local flyMovers = {
+    Gyro = nil,
+    Velocity = nil
+}
+local infiniteJumpConnection = nil
+
+--==============================================================================
+-- ANA MENÜ PENCERESİ VE SEKMESİ
+--==============================================================================
+local Window = OrionLib:MakeWindow({
+    Name = "Nurons Krak v4 (Stable)",
+    Subtitle = "by reallykrak",
+    HidePremium = true,
+    SaveMethod = "IgniteConfig",
+    DragToggle = Enum.KeyCode.RightControl,
+    IntroEnabled = false
+})
+
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345637",
+    Premium = false
+})
+
+--==============================================================================
+-- "MAIN" SEKMESİ ELEMENTLERİ
+--==============================================================================
+
+-- Hız Ayarları
+MainTab:AddLabel("Speed Settings")
+
+MainTab:AddToggle({
+    Name = "Speed",
+    Default = false,
+    Callback = function(value)
+        Settings.Speed.Enabled = value
+        -- Hız kapatılırsa, anında varsayılan değere dön
+        if not value and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+            localPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+    end
+})
+
+MainTab:AddSlider({
+    Name = "Speed Amount",
+    Min = 16,
+    Max = 500,
+    Default = 16,
+    Callback = function(value)
+        Settings.Speed.Value = value
+    end
+})
+
+-- Zıplama Ayarları
+MainTab:AddLabel("Jump Settings")
+
+MainTab:AddToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Callback = function(value)
+        Settings.InfiniteJump.Enabled = value
+        if value then
+            -- Sadece bir kere bağlantı oluştur
+            if not infiniteJumpConnection then
+                infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
+                    if Settings.InfiniteJump.Enabled and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+                        localPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                    end
+                end)
+            end
+        else
+            -- Artık gerekli değil, ancak bağlantıyı kesmek istersen diye bırakıldı
+            -- Genellikle bu tür bir bağlantıyı sürekli açık bırakmak sorun olmaz
+        end
+    end
+})
+
+-- Uçma Ayarları
+MainTab:AddLabel("Fly Settings")
+
+MainTab:AddToggle({
+    Name = "Fly",
+    Default = false,
+    Callback = function(value)
+        Settings.Fly.Enabled = value
+        local character = localPlayer.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+        local humanoid = character:FindFirstChild("Humanoid")
+        local hrp = character.HumanoidRootPart
+        
+        if value then
+            -- Uçuş için fiziksel objeleri oluştur
+            if not flyMovers.Gyro then
+                flyMovers.Gyro = Instance.new("BodyGyro", hrp)
+                flyMovers.Gyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            end
+            if not flyMovers.Velocity then
+                flyMovers.Velocity = Instance.new("BodyVelocity", hrp)
+                flyMovers.Velocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            end
+            if humanoid then humanoid.PlatformStand = true end
+        else
+            -- Uçuş için fiziksel objeleri yok et
+            if flyMovers.Gyro then flyMovers.Gyro:Destroy(); flyMovers.Gyro = nil end
+            if flyMovers.Velocity then flyMovers.Velocity:Destroy(); flyMovers.Velocity = nil end
+            if humanoid then humanoid.PlatformStand = false end
+        end
+    end
+})
+
+MainTab:AddSlider({
+    Name = "Fly Speed",
+    Min = 1,
+    Max = 150,
+    Default = 10,
+    Callback = function(value)
+        Settings.Fly.Value = value
+    end
+})
+
+--==============================================================================
+-- TEK ANA OYUN DÖNGÜSÜ
+-- Bu döngü, bütün özellikleri stabil bir şekilde yönetir.
+--==============================================================================
+RunService.Heartbeat:Connect(function()
+    local character = localPlayer.Character
+    local humanoid = character and character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+
+    -- Speed özelliğini uygula
+    if Settings.Speed.Enabled then
+        humanoid.WalkSpeed = Settings.Speed.Value
+    end
+
+    -- Fly özelliğini uygula
+    if Settings.Fly.Enabled and flyMovers.Velocity and flyMovers.Gyro then
+        local camera = workspace.CurrentCamera
+        local direction = Vector3.new(0, 0, 0)
+        
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then direction = direction - camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then direction = direction + camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then direction = direction + camera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then direction = direction - camera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.E) then direction = direction + Vector3.new(0, 1, 0) end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Q) then direction = direction - Vector3.new(0, 1, 0) end
+
+        flyMovers.Gyro.CFrame = camera.CFrame
+        if direction.Magnitude > 0 then
+            flyMovers.Velocity.Velocity = direction.Unit * Settings.Fly.Value
+        else
+            flyMovers.Velocity.Velocity = Vector3.new(0, 0, 0)
+        end
+    end
+end)
+
+--==============================================================================
+-- KÜTÜPHANEYİ BAŞLAT
+--==============================================================================
+OrionLib:Init()
