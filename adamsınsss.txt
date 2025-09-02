@@ -1,0 +1,373 @@
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+
+local Window = OrionLib:MakeWindow({Name = "Fly Menu by reallykrak & Kayra", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
+
+-- ===================================================================================
+-- ANA SEKMELER
+-- ===================================================================================
+
+local MainTab = Window:MakeTab({
+	Name = "Main",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+local AutoFarmTab = Window:MakeTab({
+    Name = "Auto Farm",
+    Icon = "rbxassetid://6023426922", -- Örnek bir ikon ID'si
+    PremiumOnly = false
+})
+
+-- ===================================================================================
+-- UÇUŞ MENÜSÜ (MEVCUT KODUNUZ)
+-- ===================================================================================
+
+local FlySection = MainTab:AddSection({
+	Name = "Fly Ayarları"
+})
+
+local speeds = 1
+local nowe = false
+local tpwalking = false
+local flyEnabled = false
+
+local function updateFlyState()
+    local speaker = game:GetService("Players").LocalPlayer
+    local chr = speaker.Character
+    if not chr then return end
+    local hum = chr:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    if flyEnabled then
+        nowe = true
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "reallykrak & Kayra",
+            Text = "Fly AÇIK!",
+            Duration = 3
+        })
+
+        for i, v in next, hum:GetPlayingAnimationTracks() do
+            v:AdjustSpeed(0)
+        end
+        hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Flying, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Landed, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Running, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, false)
+        hum:ChangeState(Enum.HumanoidStateType.Swimming)
+
+        for i = 1, speeds do
+            spawn(function()
+                local hb = game:GetService("RunService").Heartbeat
+                tpwalking = true
+                while tpwalking and hb:Wait() and chr and hum and hum.Parent do
+                    if hum.MoveDirection.Magnitude > 0 then
+                        chr:TranslateBy(hum.MoveDirection * speeds)
+                    end
+                end
+            end)
+        end
+
+        local bodyPart = chr:FindFirstChild("UpperTorso") or chr:FindFirstChild("Torso")
+        if not bodyPart then return end
+
+        local bg = Instance.new("BodyGyro", bodyPart)
+        bg.P = 9e4
+        bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bg.cframe = bodyPart.CFrame
+        local bv = Instance.new("BodyVelocity", bodyPart)
+        bv.velocity = Vector3.new(0, 0.1, 0)
+        bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+        hum.PlatformStand = true
+
+        spawn(function()
+            while flyEnabled and chr and hum and hum.Health > 0 do
+                game:GetService("RunService").RenderStepped:Wait()
+                bv.velocity = (game.Workspace.CurrentCamera.CoordinateFrame.lookVector * speeds)
+                bg.cframe = game.Workspace.CurrentCamera.CoordinateFrame
+            end
+            bg:Destroy()
+            bv:Destroy()
+            hum.PlatformStand = false
+        end)
+
+    else
+        nowe = false
+        tpwalking = false
+        hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Flying, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Landed, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Running, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics, true)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, true)
+        hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+        
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "reallykrak & Kayra",
+            Text = "Fly KAPALI!",
+            Duration = 3
+        })
+    end
+end
+
+MainTab:AddToggle({
+	Name = "Fly'ı Aktif Et",
+	Callback = function(Value)
+		flyEnabled = Value
+		updateFlyState()
+	end    
+})
+
+MainTab:AddSlider({
+	Name = "Uçuş Hızı",
+	Min = 1,
+	Max = 100,
+	Default = 1,
+	Color = Color3.fromRGB(255,85,0),
+	Increment = 1,
+	ValueName = "Hız",
+	Callback = function(Value)
+		speeds = Value
+		OrionLib:MakeNotification({
+			Name = "Hız Değişti!",
+			Content = "Yeni uçuş hızı: " .. tostring(speeds),
+			Image = "rbxassetid://4483345998",
+			Time = 5
+		})
+	end
+})
+
+-- ===================================================================================
+-- AUTO FARM BÖLÜMÜ
+-- ===================================================================================
+
+local autoFarmSection = AutoFarmTab:AddSection({
+    Name = "Beach Ball Toplayıcı"
+})
+
+local autoFarmEnabled = false
+local farmSpeed = 25
+local isFarming = false
+local beachBallName = "BeachBall" -- EĞER OYUNDAKİ ADI FARKLIYSA BUNU DEĞİŞTİRİN
+
+local function getClosestBeachBall()
+    local closestBall = nil
+    local shortestDistance = math.huge
+    local player = game:GetService("Players").LocalPlayer
+    local character = player.Character
+
+    if not character then return nil end
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return nil end
+
+    for i, v in pairs(game.Workspace:GetDescendants()) do
+        if v.Name == beachBallName and v:IsA("BasePart") then
+            local distance = (humanoidRootPart.Position - v.Position).Magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                closestBall = v
+            end
+        end
+    end
+    return closestBall
+end
+
+local function startAutoFarm()
+    isFarming = true
+    local player = game:GetService("Players").LocalPlayer
+    
+    spawn(function()
+        while isFarming and autoFarmEnabled do
+            local character = player.Character
+            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+            
+            if not (character and humanoid and humanoid.Health > 0) then
+                isFarming = false
+                break
+            end
+            
+            local closestBall = getClosestBeachBall()
+            
+            if closestBall then
+                humanoid:MoveTo(closestBall.Position)
+            else
+                -- Eğer toplanacak bir şey yoksa beklemeye geç
+                humanoid:MoveTo(humanoid.Parent.HumanoidRootPart.Position) -- Hareketi durdur
+                OrionLib:MakeNotification({
+                    Name = "Auto Farm",
+                    Content = "Toplanacak beach ball bulunamadı. Turun bitmesi bekleniyor.",
+                    Image = "rbxassetid://6023426922",
+                    Time = 5
+                })
+                isFarming = false -- Döngüden çık ve tur bitimini bekle
+            end
+            
+            wait(0.1)
+        end
+    end)
+end
+
+local function stopAutoFarm()
+    isFarming = false
+end
+
+autoFarmSection:AddToggle({
+    Name = "Auto Farm'ı Aktif Et",
+    Callback = function(Value)
+        autoFarmEnabled = Value
+        if not Value then
+            stopAutoFarm()
+        end
+    end
+})
+
+autoFarmSection:AddSlider({
+    Name = "Toplama Hızı",
+    Min = 16,
+    Max = 100,
+    Default = 25,
+    Color = Color3.fromRGB(0, 170, 255),
+    Increment = 1,
+    ValueName = "Hız",
+    Callback = function(Value)
+        farmSpeed = Value
+        local player = game:GetService("Players").LocalPlayer
+        if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = farmSpeed
+        end
+        OrionLib:MakeNotification({
+            Name = "Hız Değişti!",
+            Content = "Yeni toplama hızı: " .. tostring(farmSpeed),
+            Image = "rbxassetid://6023426922",
+            Time = 5
+        })
+    end
+})
+
+-- ===================================================================================
+-- ANTI-AFK BÖLÜMÜ
+-- ===================================================================================
+
+local antiAfkSection = AutoFarmTab:AddSection({
+    Name = "Anti AFK"
+})
+
+local antiAfkEnabled = false
+
+local idleConnection
+local VirtualUser = game:GetService('VirtualUser')
+
+local function enableAntiAfk()
+    if not idleConnection then
+        idleConnection = game:GetService('Players').LocalPlayer.Idled:connect(function()
+            if antiAfkEnabled then
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+                
+                OrionLib:MakeNotification({
+                    Name = "Anti-AFK",
+                    Content = "AFK kalmanız engellendi!",
+                    Image = "rbxassetid://4483345998",
+                    Time = 2
+                })
+            end
+        end)
+    end
+end
+
+local function disableAntiAfk()
+    if idleConnection then
+        idleConnection:Disconnect()
+        idleConnection = nil
+    end
+end
+
+antiAfkSection:AddToggle({
+    Name = "Anti-AFK'yı Aktif Et",
+    Default = false,
+    Callback = function(Value)
+        antiAfkEnabled = Value
+        if Value then
+            enableAntiAfk()
+            OrionLib:MakeNotification({
+                Name = "Anti-AFK",
+                Content = "Anti-AFK Aktif!",
+                Image = "rbxassetid://4483345998",
+                Time = 4
+            })
+        else
+            disableAntiAfk()
+            OrionLib:MakeNotification({
+                Name = "Anti-AFK",
+                Content = "Anti-AFK Devre Dışı!",
+                Image = "rbxassetid://4483345998",
+                Time = 4
+            })
+        end
+    end
+})
+
+-- ===================================================================================
+-- OTOMASYON YÖNETİCİSİ (TUR BAŞLANGICI/BİTİŞİ)
+-- ===================================================================================
+
+local function onRoundChange()
+    local status = game:GetService("ReplicatedStorage"):WaitForChild("Status")
+    
+    status.Changed:Connect(function(newStatus)
+        if newStatus ~= "Intermission" and autoFarmEnabled then
+            if not isFarming then
+                wait(2) -- Turun tam olarak başlamasını bekle
+                startAutoFarm()
+            end
+        elseif newStatus == "Intermission" then
+            if isFarming then
+                stopAutoFarm()
+            end
+        end
+    end)
+end
+
+-- ===================================================================================
+-- BETİĞİN BAŞLATILMASI VE YENİDEN DOĞMA YÖNETİMİ
+-- ===================================================================================
+
+OrionLib:Init()
+onRoundChange() -- Tur durumunu dinlemeye başla
+
+game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function(char)
+    wait(1)
+    
+    -- Karakter hızı ayarını yeniden uygula
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed = farmSpeed
+    end
+
+    -- Yeniden doğduğunda fly açıksa tekrar aktif et
+    if flyEnabled then
+        if hum then
+            hum.PlatformStand = false
+        end
+        updateFlyState()
+    end
+end)
