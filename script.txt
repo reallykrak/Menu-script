@@ -1,0 +1,249 @@
+-- Library
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+
+-- Main Window
+local Window = OrionLib:MakeWindow({Name = "Nurons Krak", HidePremium = false, SaveConfig = true, ConfigFolder = "NuronsKrakConfig"})
+
+-- Fly Tab
+local FlyTab = Window:MakeTab({
+	Name = "Fly",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+-- Fly Section
+local FlySection = FlyTab:AddSection({
+	Name = "Fly Settings"
+})
+
+-- Variables
+local flyEnabled = false
+local flySpeed = 1
+local infiniteJumpEnabled = false
+local speedEnabled = false
+local speedAmount = 16 -- Default walkspeed
+local jumpBoostEnabled = false
+local jumpBoostAmount = 50 -- Default jump power
+
+local player = game:GetService("Players").LocalPlayer
+
+-- Fly Function
+local function updateFlyState()
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    if flyEnabled then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Nurons Krak",
+            Text = "Fly ENABLED!",
+            Duration = 3
+        [cite_start]}) [cite: 2]
+
+        for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+            [cite_start]track:AdjustSpeed(0) [cite: 2]
+        end
+
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, false) [cite: 3]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false) [cite: 3]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, false) [cite: 3]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false) [cite: 3]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false) [cite: 3]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Landed, false) [cite: 3]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false) [cite: 3]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, false) [cite: 3]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false) [cite: 3]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Running, false) [cite: 4]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics, false) [cite: 4]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Seated, false) [cite: 4]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics, false) [cite: 4]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, false) [cite: 4]
+        [cite_start]hum:ChangeState(Enum.HumanoidStateType.Swimming) [cite: 4]
+
+        local bodyPart = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
+        if not bodyPart then return end
+
+        [cite_start]local bg = Instance.new("BodyGyro", bodyPart) [cite: 6]
+        [cite_start]bg.P = 10000 [cite: 6]
+        bg.D = 500
+        [cite_start]bg.MaxTorque = Vector3.new(0, 400000, 0) [cite: 6]
+        
+        [cite_start]local bv = Instance.new("BodyVelocity", bodyPart) [cite: 7]
+        [cite_start]bv.Velocity = Vector3.new(0, 0, 0) [cite: 7]
+        [cite_start]bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge) [cite: 7]
+        [cite_start]hum.PlatformStand = true [cite: 7]
+
+        spawn(function()
+            while flyEnabled and char and hum and hum.Health > 0 do
+                [cite_start]game:GetService("RunService").RenderStepped:Wait() [cite: 8]
+                [cite_start]bg.CFrame = game.Workspace.CurrentCamera.CFrame [cite: 7, 8]
+                if hum.MoveDirection.Magnitude > 0 then
+                    [cite_start]bv.Velocity = game.Workspace.CurrentCamera.CFrame.LookVector * flySpeed [cite: 8]
+                else
+                    bv.Velocity = Vector3.new(0, 0, 0)
+                end
+            end
+            [cite_start]bg:Destroy() [cite: 8]
+            [cite_start]bv:Destroy() [cite: 8]
+            [cite_start]hum.PlatformStand = false [cite: 8]
+        end)
+    else
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, true) [cite: 9]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) [cite: 9]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true) [cite: 9]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true) [cite: 9]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true) [cite: 9]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Landed, true) [cite: 9]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Physics, true) [cite: 9]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, true) [cite: 10]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true) [cite: 10]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Running, true) [cite: 10]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics, true) [cite: 10]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true) [cite: 10]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics, true) [cite: 10]
+        [cite_start]hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, true) [cite: 10]
+        [cite_start]hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics) [cite: 10]
+
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Nurons Krak",
+            [cite_start]Text = "Fly DISABLED!", [cite: 11]
+            Duration = 3
+        [cite_start]}) [cite: 11]
+    end
+end
+
+-- Infinite Jump Function
+local function updateInfiniteJump()
+    if infiniteJumpEnabled then
+        game:GetService("UserInputService").JumpRequest:Connect(function()
+            if infiniteJumpEnabled then
+                player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    end
+end
+
+-- Speed Function
+local function updateSpeed()
+    if speedEnabled and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+        player.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = speedAmount
+    elseif not speedEnabled and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+        player.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16 -- Default speed
+    end
+end
+
+-- Jump Boost Function
+local function updateJumpBoost()
+    if jumpBoostEnabled and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+        player.Character:FindFirstChildOfClass("Humanoid").JumpPower = jumpBoostAmount
+    elseif not jumpBoostEnabled and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+        player.Character:FindFirstChildOfClass("Humanoid").JumpPower = 50 -- Default jump power
+    end
+end
+
+-- UI Toggles and Sliders
+FlyTab:AddToggle({
+	Name = "Activate Fly",
+	Callback = function(Value)
+		flyEnabled = Value
+		updateFlyState()
+	end    
+})
+
+FlyTab:AddSlider({
+	Name = "Fly Speed",
+	Min = 1,
+	Max = 200,
+	Default = 1,
+	Color = Color3.fromRGB(255,85,0),
+	Increment = 1,
+	ValueName = "Speed",
+	Callback = function(Value)
+		flySpeed = Value
+		OrionLib:MakeNotification({
+			Name = "Speed Changed!",
+			Content = "New fly speed: " .. tostring(flySpeed),
+			Image = "rbxassetid://4483345998",
+			Time = 5
+		})
+	end
+})
+
+FlyTab:AddToggle({
+    Name = "Infinite Jump",
+    Callback = function(Value)
+        infiniteJumpEnabled = Value
+        updateInfiniteJump()
+        local notifText = infiniteJumpEnabled and "ENABLED" or "DISABLED"
+        OrionLib:MakeNotification({
+			Name = "Infinite Jump",
+			Content = "Infinite Jump is now " .. notifText,
+			Image = "rbxassetid://4483345998",
+			Time = 3
+		})
+    end
+})
+
+FlyTab:AddToggle({
+    Name = "Speed",
+    Callback = function(Value)
+        speedEnabled = Value
+        updateSpeed()
+    end
+})
+
+FlyTab:AddSlider({
+	Name = "Speed Amount",
+	Min = 16,
+	Max = 500,
+	Default = 16,
+	Color = Color3.fromRGB(255,85,0),
+	Increment = 1,
+	ValueName = "Amount",
+	Callback = function(Value)
+		speedAmount = Value
+        if speedEnabled then
+            updateSpeed()
+        end
+	end
+})
+
+FlyTab:AddToggle({
+    Name = "Jump Boost",
+    Callback = function(Value)
+        jumpBoostEnabled = Value
+        updateJumpBoost()
+    end
+})
+
+FlyTab:AddSlider({
+	Name = "Jump Boost Amount",
+	Min = 50,
+	Max = 500,
+	Default = 50,
+	Color = Color3.fromRGB(255,85,0),
+	Increment = 1,
+	ValueName = "Amount",
+	Callback = function(Value)
+		jumpBoostAmount = Value
+        if jumpBoostEnabled then
+            updateJumpBoost()
+        end
+	end
+})
+
+OrionLib:Init()
+
+player.CharacterAdded:Connect(function(char)
+    wait(1)
+    if flyEnabled then
+        [cite_start]updateFlyState() [cite: 12]
+    end
+    if speedEnabled then
+        updateSpeed()
+    end
+    if jumpBoostEnabled then
+        updateJumpBoost()
+    end
+end)
