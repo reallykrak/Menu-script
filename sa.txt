@@ -1,0 +1,232 @@
+--==============================================================================
+-- CORE SERVICES AND PLAYER
+--==============================================================================
+local player = game:GetService("Players").LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CollectionService = game:GetService("CollectionService")
+
+--==============================================================================
+-- GUI CREATION (MODERN UI WITHOUT LIBRARY)
+--==============================================================================
+local MainGui = Instance.new("ScreenGui")
+MainGui.Name = "StarkCommandCenter"
+MainGui.Parent = player:WaitForChild("PlayerGui")
+MainGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = MainGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderColor3 = Color3.fromRGB(80, 80, 255)
+MainFrame.BorderSizePixel = 2
+MainFrame.Size = UDim2.new(0, 500, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Parent = MainFrame
+TitleLabel.BackgroundColor3 = Color3.fromRGB(80, 80, 255)
+TitleLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Text = "Stark's Command Center"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 18
+
+--==============================================================================
+-- Toggles & Connections
+--==============================================================================
+local Toggles = {
+    Fly = false,
+    InfiniteJump = false
+}
+local Connections = {}
+
+--==============================================================================
+-- FLIGHT CONTROLS
+--==============================================================================
+local fly_speed = 50
+local fly_bv, fly_bg
+
+local function updateFly()
+    if Toggles.Fly and player.Character then
+        local char = player.Character
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        local targetPart = (humanoid.RigType == Enum.HumanoidRigType.R15 and char:FindFirstChild("UpperTorso")) or char:FindFirstChild("Torso")
+
+        if not targetPart then return end
+
+        if not fly_bg then
+            fly_bg = Instance.new("BodyGyro", targetPart)
+            fly_bg.P = 9e4
+            fly_bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+        end
+        if not fly_bv then
+            fly_bv = Instance.new("BodyVelocity", targetPart)
+            fly_bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+        end
+
+        humanoid.PlatformStand = true
+        
+        local ctrl = {f = 0, b = 0, l = 0, r = 0}
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then ctrl.f = 1 end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then ctrl.b = -1 end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then ctrl.l = -1 end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then ctrl.r = 1 end
+
+        local current_speed = ((ctrl.f + ctrl.b) ~= 0 or (ctrl.l + ctrl.r) ~= 0) and fly_speed or 0
+        
+        fly_bv.velocity = ((workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f+ctrl.b)) + ((workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l+ctrl.r, 0, 0)).p - workspace.CurrentCamera.CoordinateFrame.p)).unit * current_speed
+        fly_bg.cframe = workspace.CurrentCamera.CoordinateFrame
+    else
+        if player.Character then
+            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then humanoid.PlatformStand = false end
+        end
+        if fly_bg then fly_bg:Destroy() fly_bg = nil end
+        if fly_bv then fly_bv:Destroy() fly_bv = nil end
+    end
+end
+
+RunService.RenderStepped:Connect(updateFly)
+
+--==============================================================================
+-- MOVEMENT ABILITIES
+--==============================================================================
+local originalWalkSpeed = 16
+local originalJumpPower = 50
+
+player.CharacterAdded:Connect(function(char)
+    local humanoid = char:WaitForChild("Humanoid")
+    originalWalkSpeed = humanoid.WalkSpeed
+    originalJumpPower = humanoid.JumpPower
+end)
+
+if player.Character then
+    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        originalWalkSpeed = humanoid.WalkSpeed
+        originalJumpPower = humanoid.JumpPower
+    end
+end
+
+--==============================================================================
+-- GUI ELEMENTS (INSIDE MAIN FRAME)
+--==============================================================================
+
+local function CreateToggle(name, parent, position, callback)
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Name = name
+    ToggleButton.Parent = parent
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    ToggleButton.BorderColor3 = Color3.fromRGB(80, 80, 255)
+    ToggleButton.Size = UDim2.new(0, 150, 0, 30)
+    ToggleButton.Position = position
+    ToggleButton.Font = Enum.Font.SourceSans
+    ToggleButton.Text = name .. ": OFF"
+    ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleButton.TextSize = 16
+
+    local state = false
+    ToggleButton.MouseButton1Click:Connect(function()
+        state = not state
+        ToggleButton.Text = name .. ": " .. (state and "ON" or "OFF")
+        ToggleButton.BackgroundColor3 = state and Color3.fromRGB(80, 180, 80) or Color3.fromRGB(50, 50, 50)
+        callback(state)
+    end)
+    return ToggleButton
+end
+
+local function CreateSlider(name, parent, position, range, defaultValue, callback)
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Name = name .. "Slider"
+    SliderFrame.Parent = parent
+    SliderFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+    SliderFrame.BackgroundTransparency = 1
+    SliderFrame.Size = UDim2.new(0, 200, 0, 40)
+    SliderFrame.Position = position
+
+    local Title = Instance.new("TextLabel")
+    Title.Parent = SliderFrame
+    Title.BackgroundColor3 = Color3.new(1, 1, 1)
+    Title.BackgroundTransparency = 1
+    Title.Size = UDim2.new(1, 0, 0.5, 0)
+    Title.Font = Enum.Font.SourceSans
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 14
+    Title.Text = name .. ": " .. defaultValue
+
+    local Slider = Instance.new("Slider")
+    Slider.Parent = SliderFrame
+    Slider.Size = UDim2.new(1, 0, 0.5, 0)
+    Slider.Position = UDim2.new(0, 0, 0.5, 0)
+    Slider.MinValue = range.min
+    Slider.MaxValue = range.max
+    Slider.Value = defaultValue
+
+    Slider.ValueChanged:Connect(function(value)
+        local roundedValue = math.floor(value + 0.5)
+        Title.Text = name .. ": " .. roundedValue
+        callback(roundedValue)
+    end)
+    callback(defaultValue)
+    return SliderFrame
+end
+
+-- Fly Toggle
+CreateToggle("Flawless Fly", MainFrame, UDim2.new(0.05, 0, 0.1, 0), function(state)
+    Toggles.Fly = state
+end)
+
+-- Fly Speed Slider
+CreateSlider("Fly Speed", MainFrame, UDim2.new(0.55, 0, 0.1, 0), {min = 10, max = 500}, 50, function(value)
+    fly_speed = value
+end)
+
+-- Infinite Jump Toggle
+CreateToggle("Infinite Jump", MainFrame, UDim2.new(0.05, 0, 0.3, 0), function(state)
+    if state then
+        Connections.InfiniteJump = UserInputService.JumpRequest:Connect(function()
+            if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+                player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    else
+        if Connections.InfiniteJump then
+            Connections.InfiniteJump:Disconnect()
+            Connections.InfiniteJump = nil
+        end
+    end
+end)
+
+-- Jump Boost Toggle & Slider
+local jumpPowerValue = 150
+CreateToggle("Jump Boost", MainFrame, UDim2.new(0.05, 0, 0.5, 0), function(state)
+    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+    humanoid.JumpPower = state and jumpPowerValue or originalJumpPower
+end)
+CreateSlider("Jump Power", MainFrame, UDim2.new(0.55, 0, 0.5, 0), {min = 50, max = 500}, 150, function(value)
+    jumpPowerValue = value
+    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid and humanoid.JumpPower ~= originalJumpPower then
+        humanoid.JumpPower = value
+    end
+end)
+
+-- Speed Boost Toggle & Slider
+local walkSpeedValue = 100
+CreateToggle("Speed Boost", MainFrame, UDim2.new(0.05, 0, 0.7, 0), function(state)
+    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+    humanoid.WalkSpeed = state and walkSpeedValue or originalWalkSpeed
+end)
+CreateSlider("Walk Speed", MainFrame, UDim2.new(0.55, 0, 0.7, 0), {min = 16, max = 300}, 100, function(value)
+    walkSpeedValue = value
+    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid and humanoid.WalkSpeed ~= originalWalkSpeed then
+        humanoid.WalkSpeed = value
+    end
+end)
