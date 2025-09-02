@@ -1,0 +1,270 @@
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+
+local Window = OrionLib:MakeWindow({Name = "Fly Menu by reallykrak & Kayra", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
+
+-- ===================================================================================
+-- ANA SEKMELER
+-- ===================================================================================
+
+local MainTab = Window:MakeTab({
+	Name = "Main",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+
+local AutoFarmTab = Window:MakeTab({
+    Name = "Auto Farm",
+    Icon = "rbxassetid://6023426922", -- Örnek bir ikon ID'si
+    PremiumOnly = false
+})
+
+-- ===================================================================================
+-- HIZ VE DİĞER ARAÇLAR
+-- ===================================================================================
+
+local SpeedSection = MainTab:AddSection({
+	Name = "Speed"
+})
+
+local player = game:GetService("Players").LocalPlayer
+
+SpeedSection:AddSlider({
+	Name = "Karakter Hızı",
+	Min = 16,
+	Max = 200,
+	Default = 16,
+	Color = Color3.fromRGB(255,85,0),
+	Increment = 1,
+	ValueName = "Hız",
+	Callback = function(Value)
+		if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+			player.Character.Humanoid.WalkSpeed = Value
+		end
+	end
+})
+
+MainTab:AddButton({
+	Name = "Infinite Yield",
+	Callback = function()
+		loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+	end
+})
+
+local clockLabel = MainTab:AddLabel("Saat: Yükleniyor...")
+
+spawn(function()
+    while wait(1) do
+        clockLabel:Set("Saat: " .. os.date("%H:%M:%S"))
+    end
+end)
+
+MainTab:AddLabel("made by reallykrak")
+
+
+-- ===================================================================================
+-- AUTO FARM BÖLÜMÜ
+-- ===================================================================================
+
+local autoFarmSection = AutoFarmTab:AddSection({
+    Name = "Beach Ball Toplayıcı"
+})
+
+local autoFarmEnabled = false
+local farmSpeed = 25
+local isFarming = false
+local beachBallName = "BeachBall" -- EĞER OYUNDAKİ ADI FARKLIYSA BUNU DEĞİŞTİRİN
+
+local function getClosestBeachBall()
+    local closestBall = nil
+    local shortestDistance = math.huge
+    local player = game:GetService("Players").LocalPlayer
+    local character = player.Character
+
+    if not character then return nil end
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return nil end
+
+    for i, v in pairs(game.Workspace:GetDescendants()) do
+        if v.Name == beachBallName and v:IsA("BasePart") then
+            local distance = (humanoidRootPart.Position - v.Position).Magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                closestBall = v
+            end
+        end
+    end
+    return closestBall
+end
+
+local function startAutoFarm()
+    isFarming = true
+    local player = game:GetService("Players").LocalPlayer
+    
+    spawn(function()
+        while isFarming and autoFarmEnabled do
+            local character = player.Character
+            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+            
+            if not (character and humanoid and humanoid.Health > 0) then
+                isFarming = false
+                break
+            end
+            
+            local closestBall = getClosestBeachBall()
+            
+            if closestBall then
+                humanoid:MoveTo(closestBall.Position)
+            else
+                -- Eğer toplanacak bir şey yoksa beklemeye geç
+                humanoid:MoveTo(humanoid.Parent.HumanoidRootPart.Position) -- Hareketi durdur
+                OrionLib:MakeNotification({
+                    Name = "Auto Farm",
+                    Content = "Toplanacak beach ball bulunamadı. Turun bitmesi bekleniyor.",
+                    Image = "rbxassetid://6023426922",
+                    Time = 5
+                })
+                isFarming = false -- Döngüden çık ve tur bitimini bekle
+            end
+            
+            wait(0.1)
+        end
+    end)
+end
+
+local function stopAutoFarm()
+    isFarming = false
+end
+
+autoFarmSection:AddToggle({
+    Name = "Auto Farm'ı Aktif Et",
+    Callback = function(Value)
+        autoFarmEnabled = Value
+        if not Value then
+            stopAutoFarm()
+        end
+    end
+})
+
+autoFarmSection:AddSlider({
+    Name = "Toplama Hızı",
+    Min = 16,
+    Max = 100,
+    Default = 25,
+    Color = Color3.fromRGB(0, 170, 255),
+    Increment = 1,
+    ValueName = "Hız",
+    Callback = function(Value)
+        farmSpeed = Value
+        local player = game:GetService("Players").LocalPlayer
+        if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = farmSpeed
+        end
+        OrionLib:MakeNotification({
+            Name = "Hız Değişti!",
+            Content = "Yeni toplama hızı: " .. tostring(farmSpeed),
+            Image = "rbxassetid://6023426922",
+            Time = 5
+        })
+    end
+})
+
+-- ===================================================================================
+-- ANTI-AFK BÖLÜMÜ
+-- ===================================================================================
+
+local antiAfkSection = AutoFarmTab:AddSection({
+    Name = "Anti AFK"
+})
+
+local antiAfkEnabled = false
+
+local idleConnection
+local VirtualUser = game:GetService('VirtualUser')
+
+local function enableAntiAfk()
+    if not idleConnection then
+        idleConnection = game:GetService('Players').LocalPlayer.Idled:connect(function()
+            if antiAfkEnabled then
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+                
+                OrionLib:MakeNotification({
+                    Name = "Anti-AFK",
+                    Content = "AFK kalmanız engellendi!",
+                    Image = "rbxassetid://4483345998",
+                    Time = 2
+                })
+            end
+        end)
+    end
+end
+
+local function disableAntiAfk()
+    if idleConnection then
+        idleConnection:Disconnect()
+        idleConnection = nil
+    end
+end
+
+antiAfkSection:AddToggle({
+    Name = "Anti-AFK'yı Aktif Et",
+    Default = false,
+    Callback = function(Value)
+        antiAfkEnabled = Value
+        if Value then
+            enableAntiAfk()
+            OrionLib:MakeNotification({
+                Name = "Anti-AFK",
+                Content = "Anti-AFK Aktif!",
+                Image = "rbxassetid://4483345998",
+                Time = 4
+            })
+        else
+            disableAntiAfk()
+            OrionLib:MakeNotification({
+                Name = "Anti-AFK",
+                Content = "Anti-AFK Devre Dışı!",
+                Image = "rbxassetid://4483345998",
+                Time = 4
+            })
+        end
+    end
+})
+
+-- ===================================================================================
+-- OTOMASYON YÖNETİCİSİ (TUR BAŞLANGICI/BİTİŞİ)
+-- ===================================================================================
+
+local function onRoundChange()
+    local status = game:GetService("ReplicatedStorage"):WaitForChild("Status")
+    
+    status.Changed:Connect(function(newStatus)
+        if newStatus ~= "Intermission" and autoFarmEnabled then
+            if not isFarming then
+                wait(2) -- Turun tam olarak başlamasını bekle
+                startAutoFarm()
+            end
+        elseif newStatus == "Intermission" then
+            if isFarming then
+                stopAutoFarm()
+            end
+        end
+    end)
+end
+
+-- ===================================================================================
+-- BETİĞİN BAŞLATILMASI VE YENİDEN DOĞMA YÖNETİMİ
+-- ===================================================================================
+
+OrionLib:Init()
+onRoundChange() -- Tur durumunu dinlemeye başla
+
+game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function(char)
+    wait(1)
+    
+    -- Karakter hızı ayarını yeniden uygula
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed = farmSpeed
+    end
+end)
