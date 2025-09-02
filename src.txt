@@ -1,484 +1,458 @@
-local main = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local up = Instance.new("TextButton")
-local down = Instance.new("TextButton")
-local onof = Instance.new("TextButton")
-local TextLabel = Instance.new("TextLabel")
-local plus = Instance.new("TextButton")
-local speed = Instance.new("TextLabel")
-local mine = Instance.new("TextButton")
-local closebutton = Instance.new("TextButton")
-local mini = Instance.new("TextButton")
-local mini2 = Instance.new("TextButton")
+--[[
+	Geliştirilmiş Script v2.0
+	Hazırlayan: Gemini (Stark'ın isteği üzerine)
+	Özellikler:
+	- Modern, sürüklenebilir ve sekmeli arayüz (Main, ESP).
+	- Main Sekmesi:
+		- Gelişmiş Fly (Uçma) Modu (Aç/Kapat, Hız Ayarı).
+		- Infinite Jump (Sınırsız Zıplama) (Aç/Kapat).
+		- WalkSpeed (Yürüme Hızı) Ayarı (Aç/Kapat, Hız Ayarı).
+		- Jump Power (Zıplama Gücü) Ayarı (Aç/Kapat, Güç Ayarı).
+	- ESP Sekmesi:
+		- Oyuncu ESP (Kutucuk, İsim, Mesafe) (Aç/Kapat).
+	- Tüm özellikler için klavye kısayolları (Keybinds).
+]]
 
-main.Name = "main"
-main.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-main.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-main.ResetOnSpawn = false
+--==============================================================================
+-- TEMEL DEĞİŞKENLER VE AYARLAR
+--==============================================================================
 
-Frame.Parent = main
-Frame.BackgroundColor3 = Color3.fromRGB(163, 255, 137)
-Frame.BorderColor3 = Color3.fromRGB(103, 221, 213)
-Frame.Position = UDim2.new(0.100320168, 0, 0.379746825, 0)
-Frame.Size = UDim2.new(0, 190, 0, 57)
+local player = game:GetService("Players").LocalPlayer
+local mouse = player:GetMouse()
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
-up.Name = "up"
-up.Parent = Frame
-up.BackgroundColor3 = Color3.fromRGB(79, 255, 152)
-up.Size = UDim2.new(0, 44, 0, 28)
-up.Font = Enum.Font.SourceSans
-up.Text = "UP"
-up.TextColor3 = Color3.fromRGB(0, 0, 0)
-up.TextSize = 14.000
+-- Özelliklerin durumunu ve orijinal değerleri saklamak için tablolar
+local Toggles = {
+	Fly = false,
+	InfiniteJump = false,
+	WalkSpeed = false,
+	JumpPower = false,
+	ESP = false
+}
 
-down.Name = "down"
-down.Parent = Frame
-down.BackgroundColor3 = Color3.fromRGB(215, 255, 121)
-down.Position = UDim2.new(0, 0, 0.491228074, 
-0)
-down.Size = UDim2.new(0, 44, 0, 28)
-down.Font = Enum.Font.SourceSans
-down.Text = "DOWN"
-down.TextColor3 = Color3.fromRGB(0, 0, 0)
-down.TextSize = 14.000
+local OriginalValues = {
+	WalkSpeed = 16,
+	JumpPower = 50
+}
 
-onof.Name = "onof"
-onof.Parent = Frame
-onof.BackgroundColor3 = Color3.fromRGB(255, 249, 74)
-onof.Position = UDim2.new(0.702823281, 0, 0.491228074, 0)
-onof.Size = UDim2.new(0, 56, 0, 28)
-onof.Font = Enum.Font.SourceSans
-onof.Text = "fly"
-onof.TextColor3 = Color3.fromRGB(0, 0, 0)
-onof.TextSize = 14.000
+--==============================================================================
+-- MODERN KULLANICI ARAYÜZÜ (GUI) OLUŞTURMA
+--==============================================================================
 
-TextLabel.Parent = Frame
-TextLabel.BackgroundColor3 = Color3.fromRGB(242, 60, 255)
-TextLabel.Position = UDim2.new(0.469327301, 0, 0, 0)
-TextLabel.Size = UDim2.new(0, 100, 0, 28)
-TextLabel.Font = Enum.Font.SourceSans
-TextLabel.Text = "reallykrak & Kayra FLY"
-TextLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-TextLabel.TextScaled = true
-TextLabel.TextSize = 14.000
-TextLabel.TextWrapped = true
+-- Ana GUI elementi
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ModernMenu"
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
 
-plus.Name = "plus"
-plus.Parent = Frame
-plus.BackgroundColor3 = Color3.fromRGB(133, 145, 255)
-plus.Position = UDim2.new(0.231578946, 0, 0, 0)
-plus.Size = UDim2.new(0, 45, 0, 28)
-plus.Font = Enum.Font.SourceSans
-plus.Text = "+"
-plus.TextColor3 = Color3.fromRGB(0, 
-0, 0)
-plus.TextScaled = true
-plus.TextSize = 14.000
-plus.TextWrapped = true
+-- Ana Çerçeve
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+MainFrame.BorderColor3 = Color3.fromRGB(85, 85, 125)
+MainFrame.BorderSizePixel = 2
+MainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
+MainFrame.Size = UDim2.new(0, 400, 0, 300)
+MainFrame.Draggable = true
+MainFrame.Active = true
 
-speed.Name = "speed"
-speed.Parent = Frame
-speed.BackgroundColor3 = Color3.fromRGB(255, 85, 0)
-speed.Position = UDim2.new(0.468421042, 0, 0.491228074, 0)
-speed.Size = UDim2.new(0, 44, 0, 28)
-speed.Font = Enum.Font.SourceSans
-speed.Text = "1"
-speed.TextColor3 = Color3.fromRGB(0, 0, 0)
-speed.TextScaled = true
-speed.TextSize = 14.000
-speed.TextWrapped = true
+-- Başlık Çubuğu
+local Header = Instance.new("Frame")
+Header.Name = "Header"
+Header.Parent = MainFrame
+Header.BackgroundColor3 = Color3.fromRGB(55, 55, 75)
+Header.Size = UDim2.new(1, 0, 0, 30)
+Header.Position = UDim2.new(0, 0, 0, 0)
 
-mine.Name = "mine"
-mine.Parent = Frame
-mine.BackgroundColor3 = Color3.fromRGB(123, 255, 247)
-mine.Position = UDim2.new(0.231578946, 0, 0.491228074, 0)
-mine.Size = UDim2.new(0, 45, 0, 29)
-mine.Font = Enum.Font.SourceSans
-mine.Text = "-"
-mine.TextColor3 = Color3.fromRGB(0, 0, 0)
-mine.TextScaled = true
-mine.TextSize = 14.000
-mine.TextWrapped = true
+-- Başlık Yazısı
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Parent = Header
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundColor3 = Header.BackgroundColor3
+Title.BackgroundTransparency = 1
+Title.Size = UDim2.new(0, 100, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "Stark's Menu"
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.TextSize = 18
 
-closebutton.Name = "Close"
-closebutton.Parent = main.Frame
-closebutton.BackgroundColor3 = Color3.fromRGB(225, 25, 0)
-closebutton.Font = "SourceSans"
-closebutton.Size = UDim2.new(0, 45, 0, 28)
-closebutton.Text = "X"
-closebutton.TextSize = 30
-closebutton.Position =  UDim2.new(0, 0, -1, 27)
+-- Sekme Butonları Çerçevesi
+local TabsFrame = Instance.new("Frame")
+TabsFrame.Name = "TabsFrame"
+TabsFrame.Parent = MainFrame
+TabsFrame.BackgroundColor3 = MainFrame.BackgroundColor3
+TabsFrame.BackgroundTransparency = 1
+TabsFrame.Size = UDim2.new(1, 0, 0, 30)
+TabsFrame.Position = UDim2.new(0, 0, 0, 30)
 
-mini.Name = "minimize"
-mini.Parent = 
-main.Frame
-mini.BackgroundColor3 = Color3.fromRGB(192, 150, 230)
-mini.Font = "SourceSans"
-mini.Size = UDim2.new(0, 45, 0, 28)
-mini.Text = "-"
-mini.TextSize = 40
-mini.Position = UDim2.new(0, 44, -1, 27)
+-- İçerik Çerçevesi
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Parent = MainFrame
+ContentFrame.BackgroundColor3 = MainFrame.BackgroundColor3
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Size = UDim2.new(1, -20, 1, -80)
+ContentFrame.Position = UDim2.new(0, 10, 0, 70)
 
-mini2.Name = "minimize2"
-mini2.Parent = main.Frame
-mini2.BackgroundColor3 = Color3.fromRGB(192, 150, 230)
-mini2.Font = "SourceSans"
-mini2.Size = UDim2.new(0, 45, 0, 28)
-mini2.Text = "+"
-mini2.TextSize = 40
-mini2.Position = UDim2.new(0, 44, -1, 57)
-mini2.Visible = false
+-- Sekme İçeriklerini Saklayacak Çerçeveler
+local MainContent = Instance.new("Frame")
+MainContent.Name = "MainContent"
+MainContent.Parent = ContentFrame
+MainContent.BackgroundColor3 = MainFrame.BackgroundColor3
+MainContent.BackgroundTransparency = 1
+MainContent.Size = UDim2.new(1, 0, 1, 0)
+MainContent.Visible = true
 
-speeds = 1
+local ESPContent = Instance.new("Frame")
+ESPContent.Name = "ESPContent"
+ESPContent.Parent = ContentFrame
+ESPContent.BackgroundColor3 = MainFrame.BackgroundColor3
+ESPContent.BackgroundTransparency = 1
+ESPContent.Size = UDim2.new(1, 0, 1, 0)
+ESPContent.Visible = false
 
-local speaker = game:GetService("Players").LocalPlayer
+-- Sekme Değiştirme Fonksiyonu
+local function SwitchTab(tabName)
+	MainContent.Visible = (tabName == "Main")
+	ESPContent.Visible = (tabName == "ESP")
+end
 
-local chr = game.Players.LocalPlayer.Character
-local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
+-- Sekme Butonları
+local MainTabButton = Instance.new("TextButton")
+MainTabButton.Name = "MainTab"
+MainTabButton.Parent = TabsFrame
+MainTabButton.BackgroundColor3 = Color3.fromRGB(65, 65, 95)
+MainTabButton.Size = UDim2.new(0.5, 0, 1, 0)
+MainTabButton.Font = Enum.Font.SourceSansBold
+MainTabButton.Text = "Main"
+MainTabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MainTabButton.TextSize = 16
+MainTabButton.MouseButton1Click:Connect(function() SwitchTab("Main") end)
 
-nowe = false
+local ESPTabButton = Instance.new("TextButton")
+ESPTabButton.Name = "ESPTab"
+ESPTabButton.Parent = TabsFrame
+ESPTabButton.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+ESPTabButton.Size = UDim2.new(0.5, 0, 1, 0)
+ESPTabButton.Position = UDim2.new(0.5, 0, 0, 0)
+ESPTabButton.Font = Enum.Font.SourceSansBold
+ESPTabButton.Text = "ESP"
+ESPTabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ESPTabButton.TextSize = 16
+ESPTabButton.MouseButton1Click:Connect(function() SwitchTab("ESP") end)
 
-game:GetService("StarterGui"):SetCore("SendNotification", { 
-	Title = "reallykrak & Kayra";
-Text = "Scripts By reallykrak & Kayra";
-	Icon = "rbxthumb://type=Asset&id=5107182114&w=150&h=150"})
-Duration = 5;
+-- Bileşen Oluşturma Fonksiyonları (Daha temiz bir yapı için)
+local function CreateToggleButton(parent, text, keybind, position)
+	local button = Instance.new("TextButton")
+	button.Parent = parent
+	button.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	button.BorderColor3 = Color3.fromRGB(150, 40, 40)
+	button.Size = UDim2.new(0, 120, 0, 30)
+	button.Position = position
+	button.Font = Enum.Font.SourceSansBold
+	button.Text = text .. " [ " .. keybind .. " ]"
+	button.TextColor3 = Color3.fromRGB(255, 255, 255)
+	button.TextSize = 14
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 4)
+	corner.Parent = button
+	
+	return button
+end
 
-Frame.Active = true -- main = gui
-Frame.Draggable = true
+local function CreateTextBox(parent, placeholder, position)
+	local box = Instance.new("TextBox")
+	box.Parent = parent
+	box.BackgroundColor3 = Color3.fromRGB(55, 55, 75)
+	box.BorderColor3 = Color3.fromRGB(85, 85, 125)
+	box.Size = UDim2.new(0, 100, 0, 30)
+	box.Position = position
+	box.Font = Enum.Font.SourceSans
+	box.PlaceholderText = placeholder
+	box.Text = ""
+	box.TextColor3 = Color3.fromRGB(255, 255, 255)
+	box.TextSize = 14
+	box.ClearTextOnFocus = false
 
-onof.MouseButton1Down:connect(function()
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 4)
+	corner.Parent = box
 
-	if nowe == true then
-		nowe = false
+	return box
+end
 
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Flying,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Running,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics,true)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming,true)
-		speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
-	else 
-		nowe = true
+--==============================================================================
+-- "MAIN" SEKMESİ İÇERİĞİ
+--==============================================================================
 
+-- Fly
+local FlyButton = CreateToggleButton(MainContent, "Fly", "F", UDim2.new(0, 0, 0, 0))
+local FlySpeedInput = CreateTextBox(MainContent, "Speed (e.g., 3)", UDim2.new(0, 140, 0, 0))
 
+-- Infinite Jump
+local InfJumpButton = CreateToggleButton(MainContent, "Infinite Jump", "G", UDim2.new(0, 0, 0, 40))
 
-		for i = 1, speeds do
-			spawn(function()
+-- WalkSpeed
+local SpeedButton = CreateToggleButton(MainContent, "WalkSpeed", "X", UDim2.new(0, 0, 0, 80))
+local SpeedInput = CreateTextBox(MainContent, "Speed (e.g., 100)", UDim2.new(0, 140, 0, 80))
 
-				local hb = game:GetService("RunService").Heartbeat	
-
-
-				tpwalking = true
-				local chr = game.Players.LocalPlayer.Character
-				local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
-				while tpwalking and hb:Wait() and chr and hum and hum.Parent do
-					if hum.MoveDirection.Magnitude > 0 then
-						chr:TranslateBy(hum.MoveDirection)
-					end
-				end
-
-			end)
-		end
-		game.Players.LocalPlayer.Character.Animate.Disabled = true
-		local Char = game.Players.LocalPlayer.Character
-		local Hum = Char:FindFirstChildOfClass("Humanoid") or Char:FindFirstChildOfClass("AnimationController")
-
-		for i,v in next, Hum:GetPlayingAnimationTracks() do
-			v:AdjustSpeed(0)
-		end
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Climbing,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Flying,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Freefall,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Landed,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Running,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.RunningNoPhysics,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics,false)
-		speaker.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Swimming,false)
-		speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
-	end
+-- Jump Power
+local JumpButton = CreateToggleButton(MainContent, "Jump Power", "C", UDim2.new(0, 0, 0, 120))
+local JumpInput = CreateTextBox(MainContent, "Power (e.g., 150)", UDim2.new(0, 140, 0, 120))
 
 
+--==============================================================================
+-- "ESP" SEKMESİ İÇERİĞİ
+--==============================================================================
+local ESPButton = CreateToggleButton(ESPContent, "Player ESP", "V", UDim2.new(0, 0, 0, 0))
 
+--==============================================================================
+-- ÖZELLİKLERİN FONKSİYONLARI
+--==============================================================================
 
-	if game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid").RigType == Enum.HumanoidRigType.R6 then
+-- Fly Fonksiyonu
+local fly_bv, fly_bg
+function ToggleFly(state)
+	Toggles.Fly = state
+	local char = player.Character
+	if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+	
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	local rootPart = char.HumanoidRootPart
 
+	if Toggles.Fly then
+		FlyButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- Yeşil
+		
+		fly_bv = Instance.new("BodyVelocity", rootPart)
+		fly_bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+		fly_bv.Velocity = Vector3.new(0, 0, 0)
 
-
-		local plr = game.Players.LocalPlayer
-		local torso = plr.Character.Torso
-		local flying = true
-		local deb = true
-		local ctrl = {f = 0, b = 0, l = 
-0, r = 0}
-		local lastctrl = {f = 0, b = 0, l = 0, r = 0}
-		local maxspeed = 50
-		local speed = 0
-
-
-		local bg = Instance.new("BodyGyro", torso)
-		bg.P = 9e4
-		bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-		bg.cframe = torso.CFrame
-		local bv = Instance.new("BodyVelocity", torso)
-		bv.velocity = Vector3.new(0,0.1,0)
-		bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
-		if nowe == true then
-			plr.Character.Humanoid.PlatformStand = true
-		end
-		while nowe == true or game:GetService("Players").LocalPlayer.Character.Humanoid.Health == 0 do
-			game:GetService("RunService").RenderStepped:Wait()
-
-			if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0 then
-				speed = speed+.5+(speed/maxspeed)
-				if speed > maxspeed then
-					speed = maxspeed
-				end
-			elseif not (ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0) and speed ~= 0 then
-				speed = speed-1
-				if speed 
-< 0 then
-					speed = 0
-				end
-			end
-			if (ctrl.l + ctrl.r) ~= 0 or (ctrl.f + ctrl.b) ~= 0 then
-				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f+ctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l+ctrl.r,(ctrl.f+ctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
-				lastctrl = {f = ctrl.f, b = ctrl.b, l = ctrl.l, r = ctrl.r}
-			elseif (ctrl.l + ctrl.r) == 0 and (ctrl.f + ctrl.b) == 0 and speed ~= 0 then
-				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (lastctrl.f+lastctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lastctrl.l+lastctrl.r,(lastctrl.f+lastctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
-			else
-				bv.velocity = Vector3.new(0,0,0)
-			end
-			--	game.Players.LocalPlayer.Character.Animate.Disabled = true
-			bg.cframe = game.Workspace.CurrentCamera.CoordinateFrame * CFrame.Angles(-math.rad((ctrl.f+ctrl.b)*50*speed/maxspeed),0,0)
-		end
-		ctrl = {f = 0, b = 0, l = 0, r = 0}
-		lastctrl = {f = 0, b = 0, l = 0, r = 0}
-		speed 
-= 0
-		bg:Destroy()
-		bv:Destroy()
-		plr.Character.Humanoid.PlatformStand = false
-		game.Players.LocalPlayer.Character.Animate.Disabled = false
-		tpwalking = false
-
-
-
-
+		fly_bg = Instance.new("BodyGyro", rootPart)
+		fly_bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+		fly_bg.P = 5000
+		
+		humanoid.PlatformStand = true
 	else
-		local plr = game.Players.LocalPlayer
-		local UpperTorso = plr.Character.UpperTorso
-		local flying = true
-		local deb = true
-		local ctrl = {f = 0, b = 0, l = 0, r = 0}
-		local lastctrl = {f = 0, b = 0, l = 0, r = 0}
-		local maxspeed = 50
-		local speed = 0
+		FlyButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- Kırmızı
+		if fly_bv then fly_bv:Destroy() end
+		if fly_bg then fly_bg:Destroy() end
+		if humanoid then humanoid.PlatformStand = false end
+	end
+end
 
-
-		local bg = Instance.new("BodyGyro", UpperTorso)
-		bg.P = 9e4
-		bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
-		bg.cframe = UpperTorso.CFrame
-		local bv = Instance.new("BodyVelocity", UpperTorso)
-		bv.velocity = Vector3.new(0,0.1,0)
-		bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
-		if nowe == true then
-			plr.Character.Humanoid.PlatformStand = true
-		end
-		while nowe == true or game:GetService("Players").LocalPlayer.Character.Humanoid.Health == 0 do
-			wait()
-
-			if ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 
-0 then
-				speed = speed+.5+(speed/maxspeed)
-				if speed > maxspeed then
-					speed = maxspeed
-				end
-			elseif not (ctrl.l + ctrl.r ~= 0 or ctrl.f + ctrl.b ~= 0) and speed ~= 0 then
-				speed = speed-1
-				if speed < 0 then
-					speed = 0
-				end
+-- Infinite Jump Fonksiyonu
+function ToggleInfiniteJump(state)
+	Toggles.InfiniteJump = state
+	if Toggles.InfiniteJump then
+		InfJumpButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+		UserInputService.JumpRequest:Connect(function()
+			if Toggles.InfiniteJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+				player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
 			end
-			if (ctrl.l + ctrl.r) ~= 0 or (ctrl.f + ctrl.b) ~= 0 then
-				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f+ctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l+ctrl.r,(ctrl.f+ctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
-				lastctrl = {f = ctrl.f, b = ctrl.b, l = ctrl.l, r = ctrl.r}
-			elseif (ctrl.l + ctrl.r) == 0 and (ctrl.f + ctrl.b) == 0 and speed ~= 0 then
-				bv.velocity = ((game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (lastctrl.f+lastctrl.b)) + ((game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(lastctrl.l+lastctrl.r,(lastctrl.f+lastctrl.b)*.2,0).p) - game.Workspace.CurrentCamera.CoordinateFrame.p))*speed
-			else
-				bv.velocity = Vector3.new(0,0,0)
-			end
-
-			bg.cframe = game.Workspace.CurrentCamera.CoordinateFrame 
-* CFrame.Angles(-math.rad((ctrl.f+ctrl.b)*50*speed/maxspeed),0,0)
-		end
-		ctrl = {f = 0, b = 0, l = 0, r = 0}
-		lastctrl = {f = 0, b = 0, l = 0, r = 0}
-		speed = 0
-		bg:Destroy()
-		bv:Destroy()
-		plr.Character.Humanoid.PlatformStand = false
-		game.Players.LocalPlayer.Character.Animate.Disabled = false
-		tpwalking = false
-
-
-
-	end
-
-
-
-
-
-end)
-
-local tis
-
-up.MouseButton1Down:connect(function()
-	tis = up.MouseEnter:connect(function()
-		while tis do
-			wait()
-			game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,1,0)
-		end
-	end)
-end)
-
-up.MouseLeave:connect(function()
-	if tis then
-		tis:Disconnect()
-		tis = nil
-	end
-end)
-
-local dis
-
-down.MouseButton1Down:connect(function()
-	dis = down.MouseEnter:connect(function()
-		while dis do
-			wait()
-			game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,-1,0)
-		end
-	end)
-end)
-
-down.MouseLeave:connect(function()
-	if dis then
-		dis:Disconnect()
-		dis = nil
-	end
-end)
-
-
-game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function(char)
-	wait(0.7)
-	game.Players.LocalPlayer.Character.Humanoid.PlatformStand = false
-	game.Players.LocalPlayer.Character.Animate.Disabled = false
-
-end)
-
-
-plus.MouseButton1Down:connect(function()
-	speeds = speeds + 1
-	speed.Text = speeds
-	if nowe == true then
-
-
-		tpwalking = false
-		for i = 1, speeds do
-			spawn(function()
-
-				local hb = game:GetService("RunService").Heartbeat	
-
-
-				tpwalking = true
-				local chr = game.Players.LocalPlayer.Character
-				local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
-				while tpwalking and hb:Wait() and 
-chr and hum and hum.Parent do
-					if hum.MoveDirection.Magnitude > 0 then
-						chr:TranslateBy(hum.MoveDirection)
-					end
-				end
-
-			end)
-		end
-	end
-end)
-mine.MouseButton1Down:connect(function()
-	if speeds == 1 then
-		speed.Text = 'cannot be less than 1'
-		wait(1)
-		speed.Text = speeds
+		end)
 	else
-		speeds = speeds - 1
-		speed.Text = speeds
-		if nowe == true then
-			tpwalking = false
-			for i = 1, speeds do
-				spawn(function()
+		InfJumpButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+		-- Not: Bağlantıyı kesmek daha karmaşık bir yapı gerektirir, 
+		-- bu basit versiyonda sadece toggle'ı kontrol etmek yeterlidir.
+	end
+end
 
-					local hb = game:GetService("RunService").Heartbeat	
+-- WalkSpeed Fonksiyonu
+function ToggleWalkSpeed(state)
+	Toggles.WalkSpeed = state
+	local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
 
+	if Toggles.WalkSpeed then
+		OriginalValues.WalkSpeed = humanoid.WalkSpeed
+		local newSpeed = tonumber(SpeedInput.Text)
+		humanoid.WalkSpeed = newSpeed or 100 -- Geçersizse 100 yap
+		SpeedButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+	else
+		humanoid.WalkSpeed = OriginalValues.WalkSpeed
+		SpeedButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	end
+end
 
-					tpwalking = true
-					local chr = game.Players.LocalPlayer.Character
-					local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
-					while tpwalking and hb:Wait() and chr and hum and hum.Parent do
-						if hum.MoveDirection.Magnitude > 0 then
-							chr:TranslateBy(hum.MoveDirection)
-						end
-					end
+-- JumpPower Fonksiyonu
+function ToggleJumpPower(state)
+	Toggles.JumpPower = state
+	local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
 
-				end)
+	if Toggles.JumpPower then
+		OriginalValues.JumpPower = humanoid.JumpPower
+		local newPower = tonumber(JumpInput.Text)
+		humanoid.JumpPower = newPower or 150 -- Geçersizse 150 yap
+		JumpButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+	else
+		humanoid.JumpPower = OriginalValues.JumpPower
+		JumpButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	end
+end
+
+-- ESP Fonksiyonu
+local espConnections = {}
+function ToggleESP(state)
+	Toggles.ESP = state
+	if Toggles.ESP then
+		ESPButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+		for _, otherPlayer in pairs(game:GetService("Players"):GetPlayers()) do
+			if otherPlayer ~= player then
+				CreateESP(otherPlayer)
 			end
 		end
+		-- Yeni oyuncular katıldığında ESP oluştur
+		espConnections.PlayerAdded = game:GetService("Players").PlayerAdded:Connect(CreateESP)
+		-- Oyuncular ayrıldığında ESP'yi temizle
+		espConnections.PlayerRemoving = game:GetService("Players").PlayerRemoving:Connect(function(leftPlayer)
+			if espConnections[leftPlayer] then
+				espConnections[leftPlayer].Connection:Disconnect()
+				espConnections[leftPlayer].BillboardGui:Destroy()
+				espConnections[leftPlayer] = nil
+			end
+		end)
+	else
+		ESPButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+		-- Tüm ESP'leri ve bağlantıları temizle
+		for p, data in pairs(espConnections) do
+			if type(p) == "userdata" then
+				if data.Connection then data.Connection:Disconnect() end
+				if data.BillboardGui then data.BillboardGui:Destroy() end
+			else
+				if data then data:Disconnect() end -- PlayerAdded/Removing bağlantıları
+			end
+		end
+		espConnections = {}
+	end
+end
+
+function CreateESP(otherPlayer)
+	if not Toggles.ESP or otherPlayer == player then return end
+
+	local function setupEspForCharacter(character)
+		if espConnections[otherPlayer] and espConnections[otherPlayer].BillboardGui then
+			espConnections[otherPlayer].BillboardGui:Destroy()
+		end
+
+		local head = character:WaitForChild("Head", 5)
+		if not head then return end
+
+		local billboardGui = Instance.new("BillboardGui")
+		billboardGui.Name = "ESP_GUI"
+		billboardGui.Adornee = head
+		billboardGui.AlwaysOnTop = true
+		billboardGui.Size = UDim2.new(0, 200, 0, 100)
+		billboardGui.StudsOffset = Vector3.new(0, 2, 0)
+		billboardGui.Parent = game.CoreGui
+
+		local espBox = Instance.new("Frame")
+		espBox.Parent = billboardGui
+		espBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+		espBox.BackgroundTransparency = 1
+		espBox.BorderColor3 = Color3.fromRGB(255, 0, 0)
+		espBox.BorderSizePixel = 2
+		espBox.Size = UDim2.new(1, 0, 1, 0)
+
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Parent = billboardGui
+		nameLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		nameLabel.BackgroundTransparency = 0.5
+		nameLabel.Size = UDim2.new(1, 0, 0, 20)
+		nameLabel.Position = UDim2.new(0, 0, 0, -20)
+		nameLabel.Font = Enum.Font.SourceSans
+		nameLabel.Text = otherPlayer.Name
+		nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		nameLabel.TextSize = 14
+
+		local distLabel = Instance.new("TextLabel")
+		distLabel.Parent = billboardGui
+		distLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		distLabel.BackgroundTransparency = 0.5
+		distLabel.Size = UDim2.new(1, 0, 0, 20)
+		distLabel.Position = UDim2.new(0, 0, 1, 0)
+		distLabel.Font = Enum.Font.SourceSans
+		distLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		distLabel.TextSize = 14
+		
+		local connection = RunService.RenderStepped:Connect(function()
+			if not character or not character.Parent or not head or not head.Parent then
+				billboardGui:Destroy()
+				if espConnections[otherPlayer] then
+					espConnections[otherPlayer].Connection:Disconnect()
+					espConnections[otherPlayer] = nil
+				end
+				return
+			end
+			local distance = (player.Character.HumanoidRootPart.Position - head.Position).Magnitude
+			distLabel.Text = "Dist: " .. math.floor(distance) .. "m"
+		end)
+
+		espConnections[otherPlayer] = {
+			BillboardGui = billboardGui,
+			Connection = connection
+		}
+	end
+
+	if otherPlayer.Character then
+		setupEspForCharacter(otherPlayer.Character)
+	end
+	otherPlayer.CharacterAdded:Connect(setupEspForCharacter)
+end
+
+--==============================================================================
+-- BUTON VE KLAVYE BAĞLANTILARI
+--==============================================================================
+
+FlyButton.MouseButton1Click:Connect(function() ToggleFly(not Toggles.Fly) end)
+InfJumpButton.MouseButton1Click:Connect(function() ToggleInfiniteJump(not Toggles.InfiniteJump) end)
+SpeedButton.MouseButton1Click:Connect(function() ToggleWalkSpeed(not Toggles.WalkSpeed) end)
+JumpButton.MouseButton1Click:Connect(function() ToggleJumpPower(not Toggles.JumpPower) end)
+ESPButton.MouseButton1Click:Connect(function() ToggleESP(not Toggles.ESP) end)
+
+-- Klavye Kısayolları
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end -- Yazı yazarken çalışmasını engelle
+
+	if input.KeyCode == Enum.KeyCode.F then
+		ToggleFly(not Toggles.Fly)
+	elseif input.KeyCode == Enum.KeyCode.G then
+		ToggleInfiniteJump(not Toggles.InfiniteJump)
+	elseif input.KeyCode == Enum.KeyCode.X then
+		ToggleWalkSpeed(not Toggles.WalkSpeed)
+	elseif input.KeyCode == Enum.KeyCode.C then
+		ToggleJumpPower(not Toggles.JumpPower)
+	elseif input.KeyCode == Enum.KeyCode.V then
+		ToggleESP(not Toggles.ESP)
 	end
 end)
 
-closebutton.MouseButton1Click:Connect(function()
-	main:Destroy()
-end)
 
-mini.MouseButton1Click:Connect(function()
-	up.Visible = false
-	down.Visible = false
-	onof.Visible = false
-	plus.Visible = false
-	speed.Visible = false
-	mine.Visible = false
-	mini.Visible = false
-	mini2.Visible = true
-	main.Frame.BackgroundTransparency = 1
-	closebutton.Position =  UDim2.new(0, 0, -1, 57)
-end)
+--==============================================================================
+-- SÜREKLİ ÇALIŞACAK FONKSİYONLAR (ÖRNEĞİN FLY HAREKETİ)
+--==============================================================================
 
-mini2.MouseButton1Click:Connect(function()
-	up.Visible = true
-	down.Visible = true
-	onof.Visible = true
-	plus.Visible = true
-	speed.Visible = true
-	mine.Visible 
-= true
-	mini.Visible = true
-	mini2.Visible = false
-	main.Frame.BackgroundTransparency = 0 
-	closebutton.Position =  UDim2.new(0, 0, -1, 27)
+RunService.RenderStepped:Connect(function()
+	if Toggles.Fly and fly_bv and fly_bg then
+		local speed = tonumber(FlySpeedInput.Text) or 3
+		local moveVector = Vector3.new()
+		
+		if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveVector = moveVector + Vector3.new(0, 0, -1) end
+		if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveVector = moveVector + Vector3.new(0, 0, 1) end
+		if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveVector = moveVector + Vector3.new(-1, 0, 0) end
+		if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveVector = moveVector + Vector3.new(1, 0, 0) end
+		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveVector = moveVector + Vector3.new(0, 1, 0) end
+		if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then moveVector = moveVector + Vector3.new(0, -1, 0) end
+
+		local cameraCFrame = workspace.CurrentCamera.CFrame
+		local relativeMoveVector = cameraCFrame:VectorToWorldSpace(moveVector.Unit)
+		
+		fly_bv.Velocity = relativeMoveVector * speed * 50 -- Hızı daha etkili hale getirmek için çarpan ekledim
+		fly_bg.CFrame = cameraCFrame
+	end
 end)
