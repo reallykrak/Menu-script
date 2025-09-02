@@ -1,0 +1,103 @@
+--==============================================================================
+-- 1. ADIM: ORION KÜTÜPHANESİNİ YÜKLE
+-- Bu satır, her zaman en başta olmalıdır.
+--==============================================================================
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/ZeeZee2Real/shlexware-Orion-main-source/main/gr')))()
+
+--==============================================================================
+-- ANA MENÜ PENCERESİNİ OLUŞTUR
+--==============================================================================
+local Window = OrionLib:MakeWindow({
+    Name = "Nurons Krak v1",
+    Subtitle = "by reallykrak",
+    HidePremium = true,
+    SaveMethod = "IgniteConfig",
+    DragToggle = Enum.KeyCode.RightControl, -- Menüyü açıp kapatmak için Sağ CTRL tuşu
+    IntroEnabled = false -- Giriş animasyonunu kapat
+})
+
+--==============================================================================
+-- SEKMELERİ (TABS) OLUŞTUR
+-- Fotoğraftaki ikonlar yerine standart Orion ikonları kullanılmıştır.
+--==============================================================================
+local Tabs = {
+    ESP = Window:MakeTab({
+        Name = "ESP",
+        Icon = "rbxassetid://4483345998", -- Göz ikonu
+        Premium = false
+    }),
+    Autofarm = Window:MakeTab({
+        Name = "Autofarm",
+        Icon = "rbxassetid://4483345637", -- Şimşek ikonu
+        Premium = false
+    }),
+    WeaponSpawner = Window:MakeTab({
+        Name = "Weapon Spawner",
+        Icon = "rbxassetid://4483345345", -- Kılıç ikonu
+        Premium = false
+    }),
+    WeaponDupe = Window:MakeTab({
+        Name = "Weapon Dupe",
+        Icon = "rbxassetid://4483345155", -- Kopyalama ikonu
+        Premium = false
+    }),
+    Visual = Window:MakeTab({
+        Name = "Visual",
+        Icon = "rbxassetid://4483345001", -- Resim ikonu
+        Premium = false
+    }),
+    TradeScam = Window:MakeTab({
+        Name = "Trade-Scam",
+        Icon = "rbxassetid://4483344686", -- Kalkan ikonu
+        Premium = false
+    }),
+    AntiStealer = Window:MakeTab({
+        Name = "Anti Stealer",
+        Icon = "rbxassetid://4483344519", -- Kilit ikonu
+        Premium = false
+    }),
+    ServerLagger = Window:MakeTab({
+        Name = "Server Lagger",
+        Icon = "rbxassetid://4483344358", -- Sunucu/sinyal ikonu
+        Premium = false
+    })
+}
+
+--==============================================================================
+-- "WEAPON SPAWNER" SEKMESİNE ELEMENTLERİ EKLE
+-- Bu bölüm, fotoğrafta görünen arayüzü oluşturur.
+--==============================================================================
+local WeaponSpawnerTab = Tabs.WeaponSpawner
+
+WeaponSpawnerTab:AddTextbox({
+    Name = "Weapon Name",
+    Default = "Enter Text...",
+    TextDisappear = true,
+    Callback = function(value)
+        -- Bu fonksiyon, metin kutusuna bir şey yazıldığında çalışır.
+        -- print("Yazılan Silah Adı:", value)
+    end
+})
+
+WeaponSpawnerTab:AddDropdown({
+    Name = "Select Crate",
+    Default = "--",
+    Options = {"--", "Common Crate", "Rare Crate", "Legendary Crate"},
+    Callback = function(value)
+        -- Bu fonksiyon, bir sandık seçildiğinde çalışır.
+        -- print("Seçilen Sandık:", value)
+    end
+})
+
+WeaponSpawnerTab:AddButton({
+    Name = "Spawn Weapon (Method 1)",
+    Callback = function()
+        -- Bu fonksiyon, butona tıklandığında çalışır.
+        -- print("Silah spawn etme işlemi başlatıldı!")
+    end
+})
+
+--==============================================================================
+-- KÜTÜPHANEYİ BAŞLAT
+--==============================================================================
+OrionLib:Init()
