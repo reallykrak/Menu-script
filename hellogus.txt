@@ -1,0 +1,164 @@
+--==============================================================================
+-- 1. ADIM: ORION KÜTÜPHANESİNİ YÜKLE
+[cite_start]-- Bu satır, her zaman en başta olmalıdır. [cite: 1]
+--==============================================================================
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/ZeeZee2Real/shlexware-Orion-main-source/main/gr')))()
+
+--==============================================================================
+-- ANA MENÜ PENCERESİNİ OLUŞTUR
+--==============================================================================
+local Window = OrionLib:MakeWindow({
+    Name = "Nurons Krak v1",
+    Subtitle = "by reallykrak",
+    HidePremium = true,
+    SaveMethod = "IgniteConfig",
+    DragToggle = Enum.KeyCode.RightControl, -- Menüyü açıp kapatmak için Sağ CTRL tuşu
+    IntroEnabled = false -- Giriş animasyonunu kapat
+})
+
+--==============================================================================
+-- SEKMELERİ (TABS) OLUŞTUR
+--==============================================================================
+local Tabs = {
+    Main = Window:MakeTab({
+        Name = "Main",
+        Icon = "rbxassetid://4483345637", -- Şimşek ikonu
+        Premium = false
+    }),
+    ESP = Window:MakeTab({
+        Name = "ESP",
+        [cite_start]Icon = "rbxassetid://4483345998", -- Göz ikonu [cite: 3]
+        Premium = false
+    }),
+    Autofarm = Window:MakeTab({
+        Name = "Autofarm",
+        [cite_start]Icon = "rbxassetid://4483345637", -- Şimşek ikonu [cite: 3]
+        Premium = false
+    }),
+    WeaponSpawner = Window:MakeTab({
+        Name = "Weapon Spawner",
+        [cite_start]Icon = "rbxassetid://4483345345", -- Kılıç ikonu [cite: 4]
+        Premium = false
+    }),
+    WeaponDupe = Window:MakeTab({
+        Name = "Weapon Dupe",
+        [cite_start]Icon = "rbxassetid://4483345155", -- Kopyalama ikonu [cite: 4]
+        Premium = false
+    }),
+    Visual = Window:MakeTab({
+        Name = "Visual",
+        [cite_start]Icon = "rbxassetid://4483345001", -- Resim ikonu [cite: 5]
+        Premium = false
+    }),
+    TradeScam = Window:MakeTab({
+        Name = "Trade-Scam",
+        [cite_start]Icon = "rbxassetid://4483344686", -- Kalkan ikonu [cite: 5]
+        Premium = false
+    }),
+    AntiStealer = Window:MakeTab({
+        Name = "Anti Stealer",
+        [cite_start]Icon = "rbxassetid://4483344519", -- Kilit ikonu [cite: 5]
+        Premium = false
+    }),
+    ServerLagger = Window:MakeTab({
+        Name = "Server Lagger",
+        [cite_start]Icon = "rbxassetid://4483344358", -- Sunucu/sinyal ikonu [cite: 6]
+        Premium = false
+    })
+}
+
+--==============================================================================
+-- "MAIN" SEKMESİNE ELEMENTLERİ EKLE
+--==============================================================================
+local MainTab = Tabs.Main
+
+MainTab:AddToggle({
+    Name = "Fly",
+    Callback = function(value)
+        -- Uçma kodunu buraya ekleyin
+        -- print("Fly:", value)
+    end
+})
+
+MainTab:AddToggle({
+    Name = "Infinite Jump",
+    Callback = function(value)
+        -- Sonsuz zıplama kodunu buraya ekleyin
+        -- print("Infinite Jump:", value)
+    end
+})
+
+MainTab:AddSlider({
+    Name = "Speed",
+    Min = 16,
+    Max = 500,
+    Default = 16,
+    Callback = function(value)
+        -- Hız değiştirme kodunu buraya ekleyin
+        -- print("Speed:", value)
+    end
+})
+
+MainTab:AddSlider({
+    Name = "Jump Boost",
+    Min = 50,
+    Max = 500,
+    Default = 50,
+    Callback = function(value)
+        -- Zıplama gücü kodunu buraya ekleyin
+        -- print("Jump Boost:", value)
+    end
+})
+
+
+--==============================================================================
+-- "ESP" SEKMESİNE ELEMENTLERİ EKLE
+--==============================================================================
+local ESPTab = Tabs.ESP
+
+ESPTab:AddToggle({
+    Name = "Enable ESP",
+    Callback = function(value)
+        -- ESP kodunu buraya ekleyin
+        -- print("ESP Enabled:", value)
+    end
+})
+
+
+--==============================================================================
+-- "WEAPON SPAWNER" SEKMESİNE ELEMENTLERİ EKLE
+--==============================================================================
+[cite_start]local WeaponSpawnerTab = Tabs.WeaponSpawner [cite: 7]
+
+WeaponSpawnerTab:AddTextbox({
+    Name = "Weapon Name",
+    Default = "Enter Text...",
+    TextDisappear = true,
+    Callback = function(value)
+        -- Bu fonksiyon, metin kutusuna bir şey yazıldığında çalışır.
+        -- print("Yazılan Silah Adı:", value)
+    end
+})
+
+WeaponSpawnerTab:AddDropdown({
+    Name = "Select Crate",
+    Default = "--",
+    Options = {"--", "Common Crate", "Rare Crate", "Legendary Crate"},
+    Callback = function(value)
+        -- Bu fonksiyon, bir sandık seçildiğinde çalışır.
+        -- print("Seçilen Sandık:", value)
+    end
+})
+
+WeaponSpawnerTab:AddButton({
+    Name = "Spawn Weapon (Method 1)",
+    Callback = function()
+        -- Bu fonksiyon, butona tıklandığında çalışır.
+        -- print("Silah spawn etme işlemi başlatıldı!")
+    end
+})
+
+--==============================================================================
+-- KÜTÜPHANEYİ BAŞLAT
+--==============================================================================
+OrionLib:Init()
