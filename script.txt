@@ -1,0 +1,199 @@
+--[[
+    Nurons Krak Script
+    Orion Kütüphanesi kullanılarak oluşturulmuştur.
+]]
+
+-- Orion Kütüphanesini Yükle
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/reallykrak/Orion-Lib/main/Orion-Lib.txt')))()
+
+-- Ana Pencereyi Oluştur
+local Window = OrionLib:MakeWindow({
+    Name = "Nurons Krak | by 1_F0",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "NuronsKrakConfig",
+    IntroEnabled = true,
+    IntroText = "Nurons Krak'a Hoş Geldiniz!",
+    IntroIcon = "rbxassetid://13047715178",
+    Icon = "rbxassetid://13047715178"
+})
+
+-- Ana Sekmeyi Oluştur
+local MainTab = Window:MakeTab({
+    Name = "Ana Sayfa",
+    Icon = "rbxassetid://13047715178",
+    PremiumOnly = false
+})
+
+-- Ana Bölümü Oluştur
+MainTab:AddLabel("Ana Kontroller")
+
+-- Sonsuz Zıplama Butonu
+MainTab:AddButton({
+    Name = "Sonsuz Zıplama Aç/Kapat",
+    Callback = function()
+        _G.infinjump = not _G.infinjump
+        if _G.infinJumpStarted == nil then
+            _G.infinJumpStarted = true
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Nurons Krak",
+                Text = "Sonsuz Zıplama Aktif!",
+                Duration = 5
+            })
+            local plr = game:GetService('Players').LocalPlayer
+            local m = plr:GetMouse()
+            m.KeyDown:connect(function(k)
+                if _G.infinjump then
+                    if k:byte() == 32 then
+                        local humanoid = game:GetService('Players').LocalPlayer.Character:FindFirstChildOfClass('Humanoid')
+                        if humanoid then
+                            humanoid:ChangeState('Jumping')
+                            wait()
+                            humanoid:ChangeState('Seated')
+                        end
+                    end
+                end
+            end)
+        end
+        OrionLib:MakeNotification({
+            Name = "Bilgi",
+            Content = "Sonsuz zıplama durumu değiştirildi.",
+            Image = "rbxassetid://13047715178",
+            Time = 5
+        })
+    end
+})
+
+-- Yürüme Hızı Kaydırıcısı
+MainTab:AddSlider({
+    Name = "Yürüme Hızı Ayarı",
+    Min = 1,
+    Max = 350,
+    Default = 16,
+    Color = Color3.fromRGB(255, 100, 100),
+    Increment = 1,
+    ValueName = "Hız",
+    Callback = function(Value)
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+        end
+    end
+})
+
+-- Zıplama Gücü Kaydırıcısı
+MainTab:AddSlider({
+    Name = "Zıplama Gücü Ayarı",
+    Min = 1,
+    Max = 350,
+    Default = 50,
+    Color = Color3.fromRGB(100, 100, 255),
+    Increment = 1,
+    ValueName = "Güç",
+    Callback = function(Value)
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+            game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+        end
+    end
+})
+
+-- Alan Seçimi Açılır Menüsü
+MainTab:AddDropdown({
+    Name = "Bölge Seç",
+    Default = "Başlangıç Dünyası",
+    Options = {"Başlangıç Dünyası", "Korsan Adası", "Ananas Cenneti"},
+    Callback = function(Option)
+        print(Option .. " seçildi.")
+        OrionLib:MakeNotification({
+            Name = "Bölge Değiştirildi",
+            Content = "Seçilen bölge: " .. Option,
+            Image = "rbxassetid://13047715178",
+            Time = 3
+        })
+    end
+})
+
+-- Yürüme Hızı Girdi Alanı
+MainTab:AddTextbox({
+    Name = "Yürüme Hızını Gir",
+    Default = "16",
+    TextDisappear = true,
+    Callback = function(Text)
+        local speed = tonumber(Text)
+        if speed and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speed
+        end
+    end
+})
+
+-- Diğer Bölümü
+MainTab:AddLabel("Diğer Ayarlar")
+
+-- Otomatik Farm Açma/Kapama
+MainTab:AddToggle({
+    Name = "Otomatik Farm",
+    Default = false,
+    Callback = function(Value)
+        print("OTOMATİK FARM: " .. tostring(Value))
+        OrionLib:MakeNotification({
+            Name = "Otomatik Farm",
+            Content = "Otomatik farm " .. (Value and "başlatıldı." or "durduruldu."),
+            Image = "rbxassetid://13047715178",
+            Time = 4
+        })
+    end
+})
+
+-- Işınlanma Sekmesi
+local TeleportTab = Window:MakeTab({
+    Name = "Işınlanma",
+    Icon = "rbxassetid://13047715178",
+    PremiumOnly = false
+})
+
+TeleportTab:AddLabel("Bölgelere Işınlan")
+
+TeleportTab:AddButton({
+    Name = "Başlangıç Adası",
+    Callback = function()
+        print("Başlangıç Adasına ışınlanılıyor...")
+        -- Işınlanma Kodu 1
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Korsan Adası",
+    Callback = function()
+        print("Korsan Adasına ışınlanılıyor...")
+        -- Işınlanma Kodu 2
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Ananas Cenneti",
+    Callback = function()
+        print("Ananas Cennetine ışınlanılıyor...")
+        -- Işınlanma Kodu 3
+    end
+})
+
+-- Çeşitli Sekmesi
+local MiscTab = Window:MakeTab({
+    Name = "Çeşitli",
+    Icon = "rbxassetid://13047715178",
+    PremiumOnly = false
+})
+
+MiscTab:AddLabel("Ekstra Özellikler")
+
+-- Örnek bir özellik
+MiscTab:AddButton({
+    Name = "Bildirim Gönder",
+    Callback = function()
+        OrionLib:MakeNotification({
+            Name = "Nurons Krak",
+            Content = "Bu harika bir bildirim!",
+            Image = "rbxassetid://13047715178",
+            Time = 5
+        })
+    end
+})
