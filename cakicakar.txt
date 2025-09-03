@@ -1,0 +1,142 @@
+-- ===================================================================================
+-- ||                             KÜTÜPHANE YÜKLEME                                 ||
+-- ===================================================================================
+-- Script'in en başında Luna kütüphanesini güvenli bir şekilde yüklüyoruz.
+local Luna
+local success, err = pcall(function()
+    Luna = loadstring(game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/refs/heads/master/source.lua", true))()
+end)
+
+-- Yükleme başarısız olursa kritik hata ver ve script'i durdur.
+if not success or not Luna then
+    warn("!!! KRİTİK HATA: Luna kütüphanesi yüklenemedi! Script durduruluyor.")
+    warn("Hata Detayı: " .. tostring(err))
+    return
+end
+print("Luna kütüphanesi başarıyla yüklendi.")
+
+-- ===================================================================================
+-- ||                             GEREKLİ SERVİSLER                                 ||
+-- ===================================================================================
+-- Oyuncu ve servis bilgilerini alıyoruz.
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- ===================================================================================
+-- ||                             FLY FONKSİYONLARI                                 ||
+-- ===================================================================================
+-- Uçma durumu ve hızı için değişkenler
+local flyEnabled = false
+local flySpeed = 50
+local BodyGyro, BodyVelocity
+
+-- Karakteri güvenli bir şekilde almak için fonksiyon
+local function getCharacter()
+    return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+end
+
+-- Uçmayı aktif eden fonksiyon
+local function enableFly()
+    local Character = getCharacter()
+    local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+    local Humanoid = Character and Character:FindFirstChild("Humanoid")
+    if not RootPart or not Humanoid then return end
+
+    -- Varsa eski objeleri temizle
+    if BodyGyro then BodyGyro:Destroy() end
+    if BodyVelocity then BodyVelocity:Destroy() end
+
+    -- Karakterin pozisyonunu ve yönünü kontrol etmek için BodyGyro oluştur.
+    BodyGyro = Instance.new("BodyGyro")
+    BodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    BodyGyro.P = 50000
+    [cite_start]BodyGyro.Parent = RootPart [cite: 7]
+
+    -- Karakterin hareketini sağlamak için BodyVelocity oluştur.
+    BodyVelocity = Instance.new("BodyVelocity")
+    BodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    BodyVelocity.Parent = RootPart
+    
+    Humanoid.PlatformStand = true
+end
+
+-- Uçmayı devre dışı bırakan fonksiyon
+local function disableFly()
+    if BodyGyro then BodyGyro:Destroy() end
+    if BodyVelocity then BodyVelocity:Destroy() end
+    
+    local Character = getCharacter()
+    local Humanoid = Character and Character:FindFirstChild("Humanoid")
+    if Humanoid then
+        [cite_start]Humanoid.PlatformStand = false [cite: 8]
+    end
+end
+
+-- Hareket döngüsü (Her karede çalışır)
+RunService.RenderStepped:Connect(function()
+    if flyEnabled and BodyGyro and BodyVelocity then
+        local camera = workspace.CurrentCamera
+        BodyGyro.CFrame = camera.CFrame
+        
+        local moveDirection = Vector3.new(0, 0, 0)
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDirection = camera.CFrame.LookVector end
+        [cite_start]if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = -camera.CFrame.LookVector end [cite: 9]
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = -camera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = camera.CFrame.RightVector end
+        
+        local verticalMove = 0
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then verticalMove = 1 end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then verticalMove = -1 end
+        
+        if moveDirection.Magnitude > 0 or verticalMove ~= 0 then
+            [cite_start]BodyVelocity.Velocity = (moveDirection * flySpeed) + Vector3.new(0, verticalMove * flySpeed, 0) [cite: 10]
+        else
+            BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        end
+    end
+end)
+
+-- ===================================================================================
+-- ||                             MENÜ TASARIMI (UI)                                ||
+-- ===================================================================================
+print("Menü arayüzü oluşturuluyor...")
+
+-- Ana Pencere
+local Window = Luna.new("Simple Fly Menu", 450, 300)
+
+-- İsteğiniz üzerine sadece "Main" adında bir sekme
+local MainTab = Window:add_tab("Main") -- Dokümantasyona uygun sekme oluşturma
+
+-- Sekme içine bir bölüm ekleme
+local FlySection = MainTab:add_section("Fly Kontrolleri")
+
+-- Bölüm içine menü elemanlarını ekleme
+FlySection:add_toggle("Fly Aktif/Pasif", flyEnabled, function(toggled)
+    flyEnabled = toggled
+    if toggled then
+        enableFly()
+    else
+        disableFly()
+    end
+end)
+
+FlySection:add_slider("Uçuş Hızı", 10, 1000, flySpeed, function(value)
+    flySpeed = math.floor(value) -- Hızı ayarla
+end)
+
+FlySection:add_label("W,A,S,D: Hareket")
+FlySection:add_label("Space / Sol CTRL: Yükselme / Alçalma")
+
+print("Menü başarıyla oluşturuldu.")
+
+-- ===================================================================================
+-- ||                      MENÜNÜN EKRANDA KALMASINI SAĞLAMA                         ||
+-- ===================================================================================
+-- BU SATIR ÇOK ÖNEMLİDİR:
+-- Script'in hemen bitmesini engeller ve siz oyundan çıkana kadar çalışır durumda kalır.
+-- Bu sayede menü ekrandan gitmez.
+print("Script'in kalıcı olması sağlandı.")
+LocalPlayer.PlayerRemoving:Wait()
